@@ -25,6 +25,10 @@ jobs:
           sudo systemctl start postgresql.service
           pg_isready
 
+      - name: Change postgres password
+        run: |
+          sudo -u postgres -p postgres psql --command="ALTER USER postgres WITH PASSWORD 'password'" --command="\du"
+
       - name: Install dependencies
         run: |
           go get -v -t -d ./...
