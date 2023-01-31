@@ -1,0 +1,68 @@
+version: v1.0
+name: Go
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+global_job_config:
+  prologue:
+    commands:
+      - sem-version go 1.19
+      - export GO111MODULE=on
+      - export GOPATH=$(go env GOPATH)
+      - 'export PATH=/home/semaphore/go/bin:$GOPATH/bin:$PATH'
+      - checkout
+      - go get ./...
+blocks:
+  - name: Install
+    task:
+      jobs:
+        - name: Download modules
+          commands:
+            - sem-version go 1.19
+            - checkout
+            - cache restore
+            - go mod vendor
+            - cache store
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+  - name: Tests
+    task:
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+      prologue:
+        commands:
+          - sem-version go 1.19
+          - sem-service start postgres
+          - checkout
+          - 'cache restore '
+          - go mod vendor
+      jobs:
+        - name: go test
+          commands:
+            - go test ./...
+  - name: Build
+    task:
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+      prologue:
+        commands:
+          - sem-version go 1.19
+          - sem-service start postgres
+          - checkout
+          - 'cache restore '
+          - go mod vendor
+      jobs:
+        - name: go build
+          commands:
+            - go build -v -o go-mux.bin
+            - artifact push project --force go-mux.bin
