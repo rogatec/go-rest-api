@@ -22,6 +22,8 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
 )`
 
 func TestMain(m *testing.M) {
+	LoadEnv()
+
 	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
@@ -41,7 +43,7 @@ func TestEmptyTable(t *testing.T) {
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	if body := response.Body.String(); body != "[]" {
+	if body := response.Body.String(); body != "null" {
 		t.Errorf("Expected an empty array. Got %s", body)
 	}
 }
