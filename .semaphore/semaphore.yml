@@ -22,10 +22,4 @@ blocks:
             - sem-service start postgres
             - go build ./...
             - go test ./... -v
-      env_vars:
-        - name: APP_DB_USERNAME
-          value: postgres
-        - name: APP_DB_PASSWORD
-          value: password
-        - name: APP_DB_NAME
-          value: postgres
+      env_vars: []
