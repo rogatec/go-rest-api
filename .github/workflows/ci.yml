@@ -8,16 +8,16 @@ on:
 
 jobs:
   build:
+    name: build and test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - name: Setup Go
-        uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        name: Setup Go
         with:
           go-version-file: "./go.mod"
+          cache: true
         id: go
 
       - name: Start PostgreSQL on Ubuntu
