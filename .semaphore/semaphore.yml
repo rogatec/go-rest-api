@@ -4,21 +4,24 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu2004
+global_job_config:
+  prologue:
+    commands:
+      - sem-version go 1.19
+      - export GO111MODULE=on
+      - export GOPATH=$(go env GOPATH)
+      - 'export PATH=/home/semaphore/go/bin:$GOPATH/bin:$PATH'
+      - checkout
+      - go get ./...
 blocks:
-  - name: Test
+  - name: Build and test
     task:
       jobs:
-        - name: go test
+        - name: build and test
           commands:
             - sem-service start postgres
-            - sem-version go 1.16
-            - export GO111MODULE=on
-            - export GOPATH=~/go
-            - 'export PATH=/home/semaphore/go/bin:$PATH'
-            - checkout
-            - go get ./…
-            - go test ./…
-            - go build -v .
+            - go build ./... -v
+            - go test ./... -v
       env_vars:
         - name: APP_DB_USERNAME
           value: postgres
