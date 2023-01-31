@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -68,6 +69,7 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
+	cwd, _ := os.Getwd()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -75,7 +77,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cause": err,
-			"cwd":   os.Getwd(),
+			"cwd":   cwd,
 		}).Fatal("Error while writing the data")
 	}
 }
@@ -109,10 +111,11 @@ func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
+		cwd, _ := os.Getwd()
 		if err != nil {
 			log.WithFields(log.Fields{
 				"cause": err,
-				"cwd":   os.Getwd(),
+				"cwd":   cwd,
 			}).Fatal("Error while close deferred body")
 		}
 	}(r.Body)
@@ -139,10 +142,11 @@ func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
+		cwd, _ := os.Getwd()
 		if err != nil {
 			log.WithFields(log.Fields{
 				"cause": err,
-				"cwd":   os.Getwd(),
+				"cwd":   cwd,
 			}).Fatal("Error while close deferred body")
 		}
 	}(r.Body)

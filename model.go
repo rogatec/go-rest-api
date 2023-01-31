@@ -44,10 +44,11 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
+		cwd, _ := os.Getwd()
 		if err != nil {
 			log.WithFields(log.Fields{
 				"cause": err,
-				"cwd":   os.Getwd(),
+				"cwd":   cwd,
 			}).Fatal("Error while closing deferred rows")
 		}
 	}(rows)
