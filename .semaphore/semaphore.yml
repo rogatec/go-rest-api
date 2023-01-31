@@ -20,7 +20,7 @@ blocks:
         - name: build and test
           commands:
             - sem-service start postgres
-            - go build ./... -v
+            - go build ./...
             - go test ./... -v
       env_vars:
         - name: APP_DB_USERNAME
