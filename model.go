@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 type product struct {
@@ -40,7 +42,15 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"cause": err,
+				"cwd":   os.Getwd(),
+			}).Fatal("Error while closing deferred rows")
+		}
+	}(rows)
 
 	var products []product
 

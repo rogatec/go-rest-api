@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"log"
+	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -29,7 +31,7 @@ func (a *App) Initialize(user, password, dbname string) {
 	a.initializeRoutes()
 }
 func (a *App) Run(addr string) {
-	log.Fatal(http.ListenAndServe(":8010", a.Router))
+	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
 func (a *App) initializeRoutes() {
@@ -69,7 +71,13 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	w.Write(response)
+	_, err := w.Write(response)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"cause": err,
+			"cwd":   os.Getwd(),
+		}).Fatal("Error while writing the data")
+	}
 }
 
 func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +107,15 @@ func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"cause": err,
+				"cwd":   os.Getwd(),
+			}).Fatal("Error while close deferred body")
+		}
+	}(r.Body)
 
 	if err := p.createProduct(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -121,7 +137,15 @@ func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"cause": err,
+				"cwd":   os.Getwd(),
+			}).Fatal("Error while close deferred body")
+		}
+	}(r.Body)
 	p.ID = id
 
 	if err := p.updateProduct(a.DB); err != nil {

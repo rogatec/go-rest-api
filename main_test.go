@@ -57,7 +57,10 @@ func TestGetNonExistentProduct(t *testing.T) {
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 
 	var m map[string]string
-	json.Unmarshal(response.Body.Bytes(), &m)
+	err := json.Unmarshal(response.Body.Bytes(), &m)
+	if err != nil {
+		t.Errorf("json unmarhsalling failed")
+	}
 	if m["error"] != "Product not found" {
 		t.Errorf("Expected the 'error' key of the response to be set to 'Product not found'. Got '%s'", m["error"])
 	}
@@ -74,7 +77,10 @@ func TestCreateProduct(t *testing.T) {
 	checkResponseCode(t, http.StatusCreated, response.Code)
 
 	var m map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &m)
+	err := json.Unmarshal(response.Body.Bytes(), &m)
+	if err != nil {
+		t.Errorf("json unmarhsalling failed")
+	}
 
 	if m["name"] != "test product" {
 		t.Errorf("Expected product name to be 'test product'. Got '%v'", m["name"])
@@ -84,7 +90,7 @@ func TestCreateProduct(t *testing.T) {
 		t.Errorf("Expected product price to be '11.22'. Got '%v'", m["price"])
 	}
 
-	// the id is compared to 1.0 because JSON unmarshaling converts numbers to
+	// the id is compared to 1.0 because JSON unmarshalling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected product ID to be '1'. Got '%v'", m["id"])
@@ -109,7 +115,10 @@ func TestUpdateProduct(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/product/1", nil)
 	response := executeRequest(req)
 	var originalProduct map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &originalProduct)
+	err := json.Unmarshal(response.Body.Bytes(), &originalProduct)
+	if err != nil {
+		t.Errorf("json unmarhsalling failed")
+	}
 
 	var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22}`)
 	req, _ = http.NewRequest("PUT", "/product/1", bytes.NewBuffer(jsonStr))
@@ -120,7 +129,10 @@ func TestUpdateProduct(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	var m map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &m)
+	err = json.Unmarshal(response.Body.Bytes(), &m)
+	if err != nil {
+		t.Errorf("json unmarhsalling failed")
+	}
 
 	if m["id"] != originalProduct["id"] {
 		t.Errorf("Expected the id to remain the same (%v). Got %v", originalProduct["id"], m["id"])
@@ -159,7 +171,10 @@ func addProducts(count int) {
 	}
 
 	for i := 0; i < count; i++ {
-		a.DB.Exec("INSERT INTO products(name, price) VALUES($1, $2)", "Product "+strconv.Itoa(i), (i+1.0)*10)
+		_, err := a.DB.Exec("INSERT INTO products(name, price) VALUES($1, $2)", "Product "+strconv.Itoa(i), (i+1.0)*10)
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -177,8 +192,14 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 func clearTable() {
-	a.DB.Exec("DELETE FROM products")
-	a.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
+	_, err := a.DB.Exec("DELETE FROM products")
+	if err != nil {
+		return
+	}
+	_, err = a.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
+	if err != nil {
+		return
+	}
 }
 
 func ensureTableExists() {
